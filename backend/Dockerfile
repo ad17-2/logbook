@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
+
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
 
 EXPOSE 8000

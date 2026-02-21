@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, time, timezone
 
 
-def generate_daily_logs(timeline, initial_cycle_used, waypoint_names=None):
+def generate_daily_logs(
+    timeline: list[dict],
+    initial_cycle_used: float,
+    waypoint_names: dict | None = None,
+) -> list[dict]:
     if not timeline:
         return []
 
@@ -14,16 +20,16 @@ def generate_daily_logs(timeline, initial_cycle_used, waypoint_names=None):
 
     total_days = (last_date - current_date).days + 1
 
-    logs = []
+    logs: list[dict] = []
     cumulative_on_duty = initial_cycle_used
 
     while current_date <= last_date:
         day_start = datetime.combine(current_date, time(0, 0), tzinfo=timezone.utc)
         day_end = day_start + timedelta(days=1)
 
-        segments = []
-        day_miles = 0
-        remarks = []
+        segments: list[dict] = []
+        day_miles = 0.0
+        remarks: list[str] = []
 
         for event in timeline:
             if event['end_time'] <= day_start or event['start_time'] >= day_end:
@@ -93,7 +99,7 @@ def generate_daily_logs(timeline, initial_cycle_used, waypoint_names=None):
     return logs
 
 
-def _merge_consecutive(segments):
+def _merge_consecutive(segments: list[dict]) -> list[dict]:
     if not segments:
         return segments
 
@@ -109,11 +115,11 @@ def _merge_consecutive(segments):
     return merged
 
 
-def _fill_gaps(segments):
+def _fill_gaps(segments: list[dict]) -> list[dict]:
     if not segments:
         return [{'status': 'off_duty', 'start_time': 0, 'end_time': 24, 'remark': ''}]
 
-    filled = []
+    filled: list[dict] = []
 
     segments.sort(key=lambda s: s['start_time'])
 
@@ -149,8 +155,8 @@ def _fill_gaps(segments):
     return filled
 
 
-def _compute_totals(segments):
-    totals = {
+def _compute_totals(segments: list[dict]) -> dict[str, float]:
+    totals: dict[str, float] = {
         'off_duty': 0,
         'sleeper_berth': 0,
         'driving': 0,
@@ -162,7 +168,7 @@ def _compute_totals(segments):
     return totals
 
 
-def _get_location_name(location):
+def _get_location_name(location: dict | None) -> str:
     if not location:
         return ''
     name = location.get('name', '')
@@ -174,8 +180,15 @@ def _get_location_name(location):
     return name
 
 
-def _get_day_locations(timeline, day_start, day_end, waypoint_names, day_index, total_days):
-    named_locs = []
+def _get_day_locations(
+    timeline: list[dict],
+    day_start: datetime,
+    day_end: datetime,
+    waypoint_names: dict,
+    day_index: int,
+    total_days: int,
+) -> tuple[str, str]:
+    named_locs: list[str] = []
     for event in timeline:
         if event['end_time'] <= day_start or event['start_time'] >= day_end:
             continue

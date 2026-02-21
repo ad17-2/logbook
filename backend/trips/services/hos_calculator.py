@@ -1,18 +1,23 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 
-DRIVE_LIMIT = 11.0
-WINDOW_LIMIT = 14.0
-BREAK_TRIGGER = 8.0
-CYCLE_LIMIT = 70.0
-FUEL_DISTANCE = 1000.0
-REST_DURATION = 10.0
-RESTART_DURATION = 34.0
-BREAK_DURATION = 0.5
-FUEL_DURATION = 0.5
+@dataclass(frozen=True)
+class HOSConfig:
+    drive_limit: float = 11.0
+    window_limit: float = 14.0
+    break_trigger: float = 8.0
+    cycle_limit: float = 70.0
+    fuel_distance: float = 1000.0
+    rest_duration: float = 10.0
+    restart_duration: float = 34.0
+    break_duration: float = 0.5
+    fuel_duration: float = 0.5
 
+
+HOS = HOSConfig()
 EPSILON = 0.001
 
 
@@ -29,9 +34,14 @@ class DriverState:
     timeline: list = field(default_factory=list)
 
 
-def calculate_hos(to_pickup_segments, to_dropoff_segments,
-                  current_cycle_used, start_time,
-                  pickup_coords, dropoff_coords):
+def calculate_hos(
+    to_pickup_segments: list[dict],
+    to_dropoff_segments: list[dict],
+    current_cycle_used: float,
+    start_time: datetime,
+    pickup_coords: dict,
+    dropoff_coords: dict,
+) -> list[dict]:
     state = DriverState(
         current_time=start_time,
         cycle_hours_used=current_cycle_used,
@@ -50,7 +60,7 @@ def calculate_hos(to_pickup_segments, to_dropoff_segments,
     return state.timeline
 
 
-def _process_driving(state, segment):
+def _process_driving(state: DriverState, segment: dict) -> None:
     remaining_miles = segment['distance_miles']
     remaining_hours = segment['duration_hours']
 
@@ -63,11 +73,11 @@ def _process_driving(state, segment):
     while remaining_hours > EPSILON:
         _ensure_shift_started(state)
 
-        time_to_drive_limit = DRIVE_LIMIT - state.drive_time_used
-        time_to_window = WINDOW_LIMIT - state.elapsed_since_shift_start
-        time_to_break = BREAK_TRIGGER - state.time_since_last_break
-        time_to_cycle = CYCLE_LIMIT - state.cycle_hours_used
-        miles_to_fuel = FUEL_DISTANCE - state.miles_since_last_fuel
+        time_to_drive_limit = HOS.drive_limit - state.drive_time_used
+        time_to_window = HOS.window_limit - state.elapsed_since_shift_start
+        time_to_break = HOS.break_trigger - state.time_since_last_break
+        time_to_cycle = HOS.cycle_limit - state.cycle_hours_used
+        miles_to_fuel = HOS.fuel_distance - state.miles_since_last_fuel
         time_to_fuel = miles_to_fuel / avg_speed if avg_speed > 0 else float('inf')
 
         max_drivable = min(
@@ -111,8 +121,15 @@ def _process_driving(state, segment):
         remaining_miles -= miles_covered
 
 
-def _handle_limit(state, time_to_drive, time_to_window, time_to_break,
-                  time_to_cycle, time_to_fuel, location):
+def _handle_limit(
+    state: DriverState,
+    time_to_drive: float,
+    time_to_window: float,
+    time_to_break: float,
+    time_to_cycle: float,
+    time_to_fuel: float,
+    location: dict,
+) -> None:
     if time_to_cycle <= EPSILON:
         _apply_34hr_restart(state, location)
     elif time_to_drive <= EPSILON or time_to_window <= EPSILON:
@@ -123,14 +140,20 @@ def _handle_limit(state, time_to_drive, time_to_window, time_to_break,
         _apply_fuel_stop(state, location)
 
 
-def _process_on_duty_activity(state, duration, remark, location, label):
+def _process_on_duty_activity(
+    state: DriverState,
+    duration: float,
+    remark: str,
+    location: dict,
+    label: str,
+) -> None:
     remaining = duration
 
     while remaining > EPSILON:
         _ensure_shift_started(state)
 
-        time_to_window = WINDOW_LIMIT - state.elapsed_since_shift_start
-        time_to_cycle = CYCLE_LIMIT - state.cycle_hours_used
+        time_to_window = HOS.window_limit - state.elapsed_since_shift_start
+        time_to_cycle = HOS.cycle_limit - state.cycle_hours_used
 
         doable = min(max(time_to_window, 0), max(time_to_cycle, 0), remaining)
 
@@ -160,24 +183,24 @@ def _process_on_duty_activity(state, duration, remark, location, label):
         state.current_time = end_time
         remaining -= doable
 
-        if doable >= BREAK_DURATION:
+        if doable >= HOS.break_duration:
             state.time_since_last_break = 0
 
 
-def _ensure_shift_started(state):
+def _ensure_shift_started(state: DriverState) -> None:
     if not state.shift_started:
         state.shift_started = True
         state.elapsed_since_shift_start = 0
 
 
-def _apply_30min_break(state, location):
-    end_time = state.current_time + timedelta(hours=BREAK_DURATION)
+def _apply_30min_break(state: DriverState, location: dict) -> None:
+    end_time = state.current_time + timedelta(hours=HOS.break_duration)
 
     state.timeline.append({
         'status': 'off_duty',
         'start_time': state.current_time,
         'end_time': end_time,
-        'duration_hours': BREAK_DURATION,
+        'duration_hours': HOS.break_duration,
         'location': location,
         'remark': '30-min break',
         'miles': 0,
@@ -185,19 +208,19 @@ def _apply_30min_break(state, location):
         'event_type_label': 'rest_break',
     })
 
-    state.elapsed_since_shift_start += BREAK_DURATION
+    state.elapsed_since_shift_start += HOS.break_duration
     state.time_since_last_break = 0
     state.current_time = end_time
 
 
-def _apply_fuel_stop(state, location):
-    end_time = state.current_time + timedelta(hours=FUEL_DURATION)
+def _apply_fuel_stop(state: DriverState, location: dict) -> None:
+    end_time = state.current_time + timedelta(hours=HOS.fuel_duration)
 
     state.timeline.append({
         'status': 'on_duty_not_driving',
         'start_time': state.current_time,
         'end_time': end_time,
-        'duration_hours': FUEL_DURATION,
+        'duration_hours': HOS.fuel_duration,
         'location': location,
         'remark': 'Fuel stop',
         'miles': 0,
@@ -205,23 +228,23 @@ def _apply_fuel_stop(state, location):
         'event_type_label': 'fuel',
     })
 
-    state.elapsed_since_shift_start += FUEL_DURATION
-    state.cycle_hours_used += FUEL_DURATION
+    state.elapsed_since_shift_start += HOS.fuel_duration
+    state.cycle_hours_used += HOS.fuel_duration
     state.miles_since_last_fuel = 0
     state.current_time = end_time
 
-    if FUEL_DURATION >= BREAK_DURATION:
+    if HOS.fuel_duration >= HOS.break_duration:
         state.time_since_last_break = 0
 
 
-def _apply_10hr_rest(state, location):
-    end_time = state.current_time + timedelta(hours=REST_DURATION)
+def _apply_10hr_rest(state: DriverState, location: dict) -> None:
+    end_time = state.current_time + timedelta(hours=HOS.rest_duration)
 
     state.timeline.append({
         'status': 'sleeper_berth',
         'start_time': state.current_time,
         'end_time': end_time,
-        'duration_hours': REST_DURATION,
+        'duration_hours': HOS.rest_duration,
         'location': location,
         'remark': '10-hour rest',
         'miles': 0,
@@ -236,14 +259,14 @@ def _apply_10hr_rest(state, location):
     state.current_time = end_time
 
 
-def _apply_34hr_restart(state, location):
-    end_time = state.current_time + timedelta(hours=RESTART_DURATION)
+def _apply_34hr_restart(state: DriverState, location: dict) -> None:
+    end_time = state.current_time + timedelta(hours=HOS.restart_duration)
 
     state.timeline.append({
         'status': 'sleeper_berth',
         'start_time': state.current_time,
         'end_time': end_time,
-        'duration_hours': RESTART_DURATION,
+        'duration_hours': HOS.restart_duration,
         'location': location,
         'remark': '34-hour restart',
         'miles': 0,

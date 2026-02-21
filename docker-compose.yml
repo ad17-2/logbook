@@ -6,7 +6,7 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=config.settings.local
       - DJANGO_SECRET_KEY=dev-secret-key
     command: python manage.py runserver 0.0.0.0:8000
 
