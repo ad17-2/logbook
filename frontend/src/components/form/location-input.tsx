@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { searchLocations } from '../api';
-import type { LocationSuggestion } from '../types';
+import { useRef, useCallback } from 'react';
+import { useClickOutside } from '../../hooks/use-click-outside';
+import { useLocationSearch } from '../../hooks/use-location-search';
+import type { LocationSuggestion } from '../../types';
 
 interface LocationInputProps {
   label: string;
@@ -21,57 +22,15 @@ export function LocationInput({
   onBlur,
   icon,
 }: LocationInputProps): React.JSX.Element {
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const { suggestions, isLoading, isOpen, setIsOpen, activeIndex, setActiveIndex } =
+    useLocationSearch(value);
 
-  const fetchSuggestions = useCallback((query: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (query.length < 3) {
-      setSuggestions([]);
-      setIsOpen(false);
-      return;
-    }
-
-    setIsLoading(true);
-    debounceRef.current = setTimeout(async () => {
-      const results = await searchLocations(query);
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
-      setIsLoading(false);
-      setActiveIndex(-1);
-    }, 300);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent): void {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  function handleInputChange(text: string): void {
-    onChange(text);
-    fetchSuggestions(text);
-  }
+  useClickOutside(containerRef, useCallback(() => setIsOpen(false), [setIsOpen]));
 
   function selectSuggestion(suggestion: LocationSuggestion): void {
     onChange(suggestion.name);
     setIsOpen(false);
-    setSuggestions([]);
   }
 
   function handleKeyDown(e: React.KeyboardEvent): void {
@@ -79,10 +38,10 @@ export function LocationInput({
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+      setActiveIndex(activeIndex < suggestions.length - 1 ? activeIndex + 1 : 0);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+      setActiveIndex(activeIndex > 0 ? activeIndex - 1 : suggestions.length - 1);
     } else if (e.key === 'Enter' && activeIndex >= 0) {
       e.preventDefault();
       selectSuggestion(suggestions[activeIndex]);
@@ -110,7 +69,7 @@ export function LocationInput({
           type="text"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => handleInputChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={onBlur}
           className="flex-1 bg-transparent outline-none text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-tertiary)]/60"

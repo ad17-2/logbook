@@ -1,4 +1,5 @@
-import type { DailyLog } from '../types';
+import type { DailyLog } from '../../types';
+import { formatHours } from '../../lib/format';
 import { LogSheetGrid } from './log-sheet-grid';
 
 export function LogSheet({ log }: { log: DailyLog }): React.JSX.Element {
@@ -13,7 +14,6 @@ export function LogSheet({ log }: { log: DailyLog }): React.JSX.Element {
 
   return (
     <div className="bg-[var(--color-surface-raised)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-      {/* Header */}
       <div className="px-5 py-3.5 border-b border-[var(--color-border)] flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-[var(--color-accent-soft)] flex items-center justify-center font-[var(--font-display)] text-sm font-bold text-[var(--color-accent)]">
@@ -48,12 +48,10 @@ export function LogSheet({ log }: { log: DailyLog }): React.JSX.Element {
         </div>
       </div>
 
-      {/* Grid */}
       <div className="px-3 py-2.5 bg-[var(--color-surface)]">
         <LogSheetGrid log={log} />
       </div>
 
-      {/* Remarks */}
       {log.remarks.length > 0 && (
         <div className="px-5 py-3 border-t border-[var(--color-border-light)]">
           <p className="text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider mb-1.5">Remarks</p>
@@ -65,7 +63,6 @@ export function LogSheet({ log }: { log: DailyLog }): React.JSX.Element {
         </div>
       )}
 
-      {/* Recap */}
       <div className="px-5 py-3 border-t border-[var(--color-border-light)] bg-[var(--color-surface-sunken)]/50">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -94,11 +91,4 @@ export function LogSheet({ log }: { log: DailyLog }): React.JSX.Element {
       </div>
     </div>
   );
-}
-
-function formatHours(h: number): string {
-  const hours = Math.floor(h);
-  const mins = Math.round((h - hours) * 60);
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}m`;
 }

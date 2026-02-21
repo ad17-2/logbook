@@ -1,4 +1,5 @@
-import type { TripResult } from '../types';
+import type { TripResult } from '../../types';
+import { formatHours } from '../../lib/format';
 import { RouteMap } from './route-map';
 import { LogSheet } from './log-sheet';
 
@@ -111,11 +112,4 @@ export function TripResults({ result }: { result: TripResult }): React.JSX.Eleme
       </div>
     </div>
   );
-}
-
-function formatHours(h: number): string {
-  const hours = Math.floor(h);
-  const mins = Math.round((h - hours) * 60);
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}m`;
 }

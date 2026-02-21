@@ -1,19 +1,7 @@
-import { createContext, useContext, useReducer } from 'react';
+import { useReducer } from 'react';
 import type { ReactNode } from 'react';
-import type { TripInput, TripResult } from '../types';
-
-interface AppState {
-  input: TripInput;
-  loading: boolean;
-  result: TripResult | null;
-  error: string | null;
-}
-
-type Action =
-  | { type: 'SET_INPUT'; payload: TripInput }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_RESULT'; payload: TripResult }
-  | { type: 'SET_ERROR'; payload: string };
+import { TripContext } from './trip-context-value';
+import type { AppState, Action } from './trip-context-value';
 
 const initialState: AppState = {
   input: {
@@ -41,11 +29,6 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
-const TripContext = createContext<{
-  state: AppState;
-  dispatch: React.Dispatch<Action>;
-} | null>(null);
-
 export function TripProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [state, dispatch] = useReducer(reducer, initialState);
   return (
@@ -53,10 +36,4 @@ export function TripProvider({ children }: { children: ReactNode }): React.JSX.E
       {children}
     </TripContext.Provider>
   );
-}
-
-export function useTripContext(): { state: AppState; dispatch: React.Dispatch<Action> } {
-  const ctx = useContext(TripContext);
-  if (!ctx) throw new Error('useTripContext must be used within TripProvider');
-  return ctx;
 }

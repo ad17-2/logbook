@@ -1,4 +1,5 @@
-import type { DailyLog, DutyStatus, LogSegment } from '../types';
+import type { DailyLog, DutyStatus, LogSegment } from '../../types';
+import { DUTY_STATUS_CONFIG } from '../../lib/constants';
 
 const GRID_LEFT = 140;
 const GRID_RIGHT = 920;
@@ -7,13 +8,6 @@ const GRID_WIDTH = GRID_RIGHT - GRID_LEFT;
 const ROW_HEIGHT = 45;
 const HOUR_WIDTH = GRID_WIDTH / 24;
 const TOTALS_X = GRID_RIGHT + 10;
-
-const STATUS_CONFIG: { key: DutyStatus; label: string; rowIndex: number }[] = [
-  { key: 'off_duty', label: '1. Off Duty', rowIndex: 0 },
-  { key: 'sleeper_berth', label: '2. Sleeper Berth', rowIndex: 1 },
-  { key: 'driving', label: '3. Driving', rowIndex: 2 },
-  { key: 'on_duty_not_driving', label: '4. On Duty (Not Driving)', rowIndex: 3 },
-];
 
 const STATUS_ROW_INDEX: Record<DutyStatus, number> = {
   off_duty: 0,
@@ -44,7 +38,7 @@ function formatTotalHours(hours: number): string {
 }
 
 export function LogSheetGrid({ log }: { log: DailyLog }): React.JSX.Element {
-  const gridBottom = GRID_TOP + STATUS_CONFIG.length * ROW_HEIGHT;
+  const gridBottom = GRID_TOP + DUTY_STATUS_CONFIG.length * ROW_HEIGHT;
 
   return (
     <svg viewBox="0 0 1020 340" className="w-full h-auto" style={{ fontFamily: 'monospace' }}>
@@ -112,7 +106,7 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
         })
       )}
 
-      {STATUS_CONFIG.map(({ key, label, rowIndex }) => {
+      {DUTY_STATUS_CONFIG.map(({ key, label, rowIndex }) => {
         const y = GRID_TOP + rowIndex * ROW_HEIGHT;
         return (
           <g key={key}>
@@ -211,7 +205,7 @@ function TotalHoursColumn({
         stroke="#333" strokeWidth={1.5}
       />
 
-      {STATUS_CONFIG.map(({ key, rowIndex }) => (
+      {DUTY_STATUS_CONFIG.map(({ key, rowIndex }) => (
         <text
           key={key}
           x={TOTALS_X + 30}

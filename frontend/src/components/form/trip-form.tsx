@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { z } from 'zod';
-import { useTripContext } from '../context/trip-context';
-import { planTrip } from '../api';
+import { useTripContext } from '../../context/use-trip-context';
+import { planTrip } from '../../api/trips';
+import { ApiError } from '../../api/client';
 import { LocationInput } from './location-input';
-import type { TripInput } from '../types';
+import type { TripInput } from '../../types';
 
 const locationField = z.string().min(3, 'Location must be at least 3 characters');
 
@@ -101,10 +102,15 @@ export function TripForm(): React.JSX.Element {
       const result = await planTrip(form);
       dispatch({ type: 'SET_RESULT', payload: result });
     } catch (err) {
-      dispatch({
-        type: 'SET_ERROR',
-        payload: err instanceof Error ? err.message : 'An error occurred',
-      });
+      if (err instanceof ApiError) {
+        const fieldError = err.errors.find((e) => e.field !== '_root');
+        dispatch({ type: 'SET_ERROR', payload: fieldError?.message ?? err.message });
+      } else {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: err instanceof Error ? err.message : 'An error occurred',
+        });
+      }
     }
   }
 
@@ -137,7 +143,6 @@ export function TripForm(): React.JSX.Element {
         </div>
 
         <div className="relative pl-6">
-          {/* Vertical connector line */}
           <div className="absolute left-[7px] top-5 bottom-5 w-px border-l border-dashed border-[var(--color-border)]" />
 
           <div className="space-y-3">
@@ -191,7 +196,6 @@ export function TripForm(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Divider */}
       <div className="border-t border-[var(--color-border)]" />
 
       {/* HOS Section */}

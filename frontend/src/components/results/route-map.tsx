@@ -1,24 +1,10 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import type { TripResult } from '../types';
+import type { TripResult } from '../../types';
+import { formatTime, stopTypeName } from '../../lib/format';
+import { STOP_COLORS, STOP_LABELS } from '../../lib/constants';
 import 'leaflet/dist/leaflet.css';
-
-const STOP_COLORS: Record<string, string> = {
-  pickup: '#2d9d78',
-  dropoff: '#e07a2f',
-  rest_break: '#d4930d',
-  ten_hr_rest: '#d94f4f',
-  fuel: '#6366f1',
-};
-
-const STOP_LABELS: Record<string, string> = {
-  pickup: 'P',
-  dropoff: 'D',
-  rest_break: 'B',
-  ten_hr_rest: 'R',
-  fuel: 'F',
-};
 
 function createStopIcon(type: string): L.DivIcon {
   const color = STOP_COLORS[type] || '#6b7280';
@@ -56,26 +42,6 @@ function FitBounds({ polyline }: { polyline: [number, number][] }): null {
   }, [map, polyline]);
 
   return null;
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-function stopTypeName(type: string): string {
-  const names: Record<string, string> = {
-    pickup: 'Pickup',
-    dropoff: 'Dropoff',
-    rest_break: '30-Min Break',
-    ten_hr_rest: '10-Hour Rest',
-    fuel: 'Fuel Stop',
-  };
-  return names[type] || type;
 }
 
 export function RouteMap({ result }: { result: TripResult }): React.JSX.Element {
