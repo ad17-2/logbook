@@ -37,15 +37,15 @@ This application solves the planning problem: given a trip from A to B to C, whe
 ```
 +---------------------------+         +---------------------------+
 |        Frontend           |         |         Backend           |
-|  React 19 + TypeScript    |  HTTP   |  Django 4.2 + DRF        |
-|  Vite 7 + Tailwind 4     | ------> |  Python 3.11              |
+|  React 19 + TypeScript    |  HTTP   |  Django 4.2 + DRF         |
+|  Vite 7 + Tailwind 4     | ------> |  Python 3.11               |
 |  Leaflet + react-leaflet  |         |  Gunicorn (prod)          |
 |  Zod schema validation    |         |  SQLite (minimal, no ORM  |
-+---------------------------+         |    models used)            |
++---------------------------+         |    models used)           |
           |                           +---------------------------+
           |                                      |
-          |  (dev) Vite proxy /api -> :8000       |
-          |  (prod) Nginx proxy /api -> backend   |
+          |  (dev) Vite proxy /api -> :8000      |
+          |  (prod) Nginx proxy /api -> backend  |
           |                                      |
           +--------------------------------------+
                                                  |
