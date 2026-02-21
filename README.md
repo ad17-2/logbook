@@ -175,6 +175,8 @@ Each daily log contains: date, day number, from/to locations, total miles, segme
 
 ## Backend Architecture
 
+> For a deep dive into the HOS simulation algorithm, state machine mechanics, and daily log generation logic, see [Backend Business Logic](docs/BACKEND_LOGIC.md).
+
 ### Django Project Layout
 
 The backend uses a split settings pattern (`config/settings/base.py`, `local.py`, `production.py`) and a single Django app `trips` with no database models.
