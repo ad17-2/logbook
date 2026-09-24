@@ -3,9 +3,11 @@ server {
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
+    resolver ${NGINX_RESOLVER} valid=10s;
 
     location /api/ {
-        proxy_pass ${API_UPSTREAM}/api/;
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
