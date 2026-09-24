@@ -59,9 +59,9 @@ export function RouteMap({ result }: { result: TripResult }): React.JSX.Element 
 
   return (
     <div className="border border-[var(--color-fg)]">
-      <div className="px-5 py-3 border-b border-[var(--color-fg)] flex items-center justify-between">
-        <h2 className="text-sm text-[var(--color-fg)]">route map</h2>
-        <p className="text-xs text-[var(--color-muted)] tabular-nums">
+      <div className="px-5 py-3 border-b border-[var(--color-fg)] flex items-center justify-between gap-3">
+        <h2 className="text-sm text-[var(--color-fg)] whitespace-nowrap">route map</h2>
+        <p className="text-xs text-[var(--color-muted)] tabular-nums text-right">
           {result.route.totalDistanceMiles.toLocaleString()} mi
           <span className="mx-1.5">·</span>
           {Math.round(result.route.totalDurationHours)}h drive
