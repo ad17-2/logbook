@@ -14,6 +14,7 @@ const initialState: AppState = {
   loading: false,
   result: null,
   error: null,
+  exampleInput: null,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -26,6 +27,8 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, result: action.payload, loading: false };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
+    case 'REQUEST_EXAMPLE':
+      return { ...state, exampleInput: action.payload, error: null };
   }
 }
 

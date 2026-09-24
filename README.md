@@ -1,5 +1,7 @@
 # ELD Trip Planner
 
+Live demo: https://logbook.aristifandi.io
+
 A full-stack application that generates FMCSA-compliant trip plans for commercial truck drivers. Given a current location, pickup, and dropoff, the system calculates a route, inserts mandatory HOS (Hours of Service) rest stops, and produces daily ELD log sheets with duty-status timelines rendered as SVG grid charts.
 
 ---
@@ -37,8 +39,8 @@ This application solves the planning problem: given a trip from A to B to C, whe
 ```
 +---------------------------+         +---------------------------+
 |        Frontend           |         |         Backend           |
-|  React 19 + TypeScript    |  HTTP   |  Django 4.2 + DRF         |
-|  Vite 7 + Tailwind 4     | ------>  |  Python 3.11              |
+|  React 19 + TypeScript    |  HTTP   |  Django 6.1 + DRF         |
+|  Vite 8 + Tailwind 4      | ------> |  Python 3.14              |
 |  Leaflet + react-leaflet  |         |  Gunicorn (prod)          |
 |  Zod schema validation    |         |  SQLite (minimal, no ORM  |
 +---------------------------+         |    models used)           |
@@ -218,8 +220,8 @@ Both URLs are configurable via environment variables.
 
 ### Tech Stack
 
-- **React 19** with TypeScript 5.9
-- **Vite 7** for dev server and build
+- **React 19** with TypeScript 6.0
+- **Vite 8** for dev server and build
 - **Tailwind CSS 4** via `@tailwindcss/vite` plugin
 - **Leaflet** + **react-leaflet 5** for map rendering
 - **Zod 4** for runtime API response validation and snake_case-to-camelCase transformation
@@ -459,9 +461,9 @@ logbook/
 +-- .gitignore
 +--
 +-- backend/
-|   +-- Dockerfile              # Python 3.11-slim, gunicorn, collectstatic
+|   +-- Dockerfile              # Python 3.14-slim, gunicorn, collectstatic
 |   +-- manage.py
-|   +-- requirements.txt        # Django 4.2, DRF, requests, polyline, django-environ
+|   +-- requirements.txt        # Django 6.1, DRF, requests, polyline, django-environ
 |   +-- pyproject.toml          # pytest config (DJANGO_SETTINGS_MODULE, pythonpath)
 |   +--
 |   +-- config/

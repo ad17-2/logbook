@@ -24,3 +24,10 @@ export function stopTypeName(type: string): string {
   };
   return names[type] || type;
 }
+
+export function currentHourLocal(): string {
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
+}

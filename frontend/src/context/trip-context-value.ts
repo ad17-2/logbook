@@ -6,13 +6,15 @@ export interface AppState {
   loading: boolean;
   result: TripResult | null;
   error: string | null;
+  exampleInput: TripInput | null;
 }
 
 export type Action =
   | { type: 'SET_INPUT'; payload: TripInput }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_RESULT'; payload: TripResult }
-  | { type: 'SET_ERROR'; payload: string };
+  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'REQUEST_EXAMPLE'; payload: TripInput };
 
 export interface TripContextValue {
   state: AppState;

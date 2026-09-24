@@ -1,12 +1,12 @@
 import type { DailyLog, DutyStatus, LogSegment } from '../../types';
 import { DUTY_STATUS_CONFIG } from '../../lib/constants';
 
-const GRID_LEFT = 140;
-const GRID_RIGHT = 920;
-const GRID_TOP = 70;
-const GRID_WIDTH = GRID_RIGHT - GRID_LEFT;
+const GRID_LEFT = 110;
+const HOUR_WIDTH = 28;
+const GRID_WIDTH = HOUR_WIDTH * 24;
+const GRID_RIGHT = GRID_LEFT + GRID_WIDTH;
+const GRID_TOP = 40;
 const ROW_HEIGHT = 45;
-const HOUR_WIDTH = GRID_WIDTH / 24;
 const TOTALS_X = GRID_RIGHT + 10;
 
 const STATUS_ROW_INDEX: Record<DutyStatus, number> = {
@@ -25,8 +25,8 @@ function timeToX(hours: number): number {
 }
 
 function formatHour(h: number): string {
-  if (h === 0 || h === 24) return 'Mid-\nnight';
-  if (h === 12) return 'Noon';
+  if (h === 0 || h === 24) return 'mid';
+  if (h === 12) return 'noon';
   return h > 12 ? String(h - 12) : String(h);
 }
 
@@ -40,12 +40,24 @@ function formatTotalHours(hours: number): string {
 export function LogSheetGrid({ log }: { log: DailyLog }): React.JSX.Element {
   const gridBottom = GRID_TOP + DUTY_STATUS_CONFIG.length * ROW_HEIGHT;
 
+  const summary = DUTY_STATUS_CONFIG
+    .map(({ key, label }) => `${label}: ${formatTotalHours(log.totals[key] || 0)}h`)
+    .join(', ');
+
   return (
-    <svg viewBox="0 0 1020 340" className="w-full h-auto" style={{ fontFamily: 'monospace' }}>
-      <GridBackground gridBottom={gridBottom} />
-      <DutyStatusLines segments={log.segments} />
-      <TotalHoursColumn totals={log.totals} gridBottom={gridBottom} />
-    </svg>
+    <div className="overflow-x-auto">
+      <svg
+        viewBox="0 0 870 250"
+        className="w-full h-auto"
+        style={{ minWidth: '600px', fontFamily: 'var(--font-mono)', color: 'var(--color-fg)' }}
+        role="img"
+        aria-label={`day ${log.dayNumber} duty status log, ${summary}`}
+      >
+        <GridBackground gridBottom={gridBottom} />
+        <DutyStatusLines segments={log.segments} />
+        <TotalHoursColumn totals={log.totals} gridBottom={gridBottom} />
+      </svg>
+    </div>
   );
 }
 
@@ -57,8 +69,8 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
         y={GRID_TOP}
         width={GRID_WIDTH}
         height={gridBottom - GRID_TOP}
-        fill="white"
-        stroke="#333"
+        style={{ fill: 'var(--color-bg)' }}
+        stroke="currentColor"
         strokeWidth={1.5}
       />
 
@@ -70,7 +82,7 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
           <g key={`hour-${i}`}>
             <line
               x1={x} y1={GRID_TOP} x2={x} y2={gridBottom}
-              stroke={isMidnight || isNoon ? '#666' : '#bbb'}
+              style={{ stroke: 'var(--color-line)' }}
               strokeWidth={isMidnight || isNoon ? 1.5 : 0.5}
             />
             {i < 24 && (
@@ -78,14 +90,10 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
                 x={x + HOUR_WIDTH / 2}
                 y={GRID_TOP - 6}
                 textAnchor="middle"
-                fontSize={i === 0 || i === 12 ? 8 : 9}
-                fill="#333"
+                fontSize={i === 0 || i === 12 ? 11 : 12}
+                style={{ fill: 'var(--color-muted)' }}
               >
-                {formatHour(i).split('\n').map((line, li) => (
-                  <tspan key={li} x={x + HOUR_WIDTH / 2} dy={li === 0 ? 0 : 10}>
-                    {line}
-                  </tspan>
-                ))}
+                {formatHour(i)}
               </text>
             )}
           </g>
@@ -99,7 +107,7 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
             <line
               key={`tick-${hour}-${q}`}
               x1={x} y1={GRID_TOP} x2={x} y2={GRID_TOP + 4}
-              stroke="#ccc"
+              style={{ stroke: 'var(--color-line)' }}
               strokeWidth={0.5}
             />
           );
@@ -113,15 +121,15 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
             {rowIndex > 0 && (
               <line
                 x1={GRID_LEFT} y1={y} x2={GRID_RIGHT} y2={y}
-                stroke="#999" strokeWidth={0.75}
+                style={{ stroke: 'var(--color-line)' }} strokeWidth={0.75}
               />
             )}
             <text
               x={GRID_LEFT - 8}
               y={y + ROW_HEIGHT / 2 + 4}
               textAnchor="end"
-              fontSize={8}
-              fill="#333"
+              fontSize={13}
+              fill="currentColor"
             >
               {label}
             </text>
@@ -131,23 +139,12 @@ function GridBackground({ gridBottom }: { gridBottom: number }): React.JSX.Eleme
 
       <text
         x={TOTALS_X + 30}
-        y={GRID_TOP - 12}
+        y={GRID_TOP - 8}
         textAnchor="middle"
-        fontSize={8}
-        fontWeight="bold"
-        fill="#333"
+        fontSize={11}
+        style={{ fill: 'var(--color-muted)' }}
       >
-        Total
-      </text>
-      <text
-        x={TOTALS_X + 30}
-        y={GRID_TOP - 3}
-        textAnchor="middle"
-        fontSize={8}
-        fontWeight="bold"
-        fill="#333"
-      >
-        Hours
+        total h
       </text>
     </g>
   );
@@ -166,7 +163,7 @@ function DutyStatusLines({ segments }: { segments: LogSegment[] }): React.JSX.El
       <line
         key={`h-${i}`}
         x1={x1} y1={y} x2={x2} y2={y}
-        stroke="#000" strokeWidth={2.5} strokeLinecap="round"
+        stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"
       />
     );
 
@@ -179,7 +176,7 @@ function DutyStatusLines({ segments }: { segments: LogSegment[] }): React.JSX.El
           <line
             key={`v-${i}`}
             x1={x1} y1={prevY} x2={x1} y2={y}
-            stroke="#000" strokeWidth={2.5} strokeLinecap="round"
+            stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"
           />
         );
       }
@@ -202,7 +199,7 @@ function TotalHoursColumn({
     <g>
       <line
         x1={GRID_RIGHT} y1={GRID_TOP} x2={GRID_RIGHT} y2={gridBottom}
-        stroke="#333" strokeWidth={1.5}
+        stroke="currentColor" strokeWidth={1.5}
       />
 
       {DUTY_STATUS_CONFIG.map(({ key, rowIndex }) => (
@@ -211,9 +208,9 @@ function TotalHoursColumn({
           x={TOTALS_X + 30}
           y={rowCenterY(rowIndex) + 4}
           textAnchor="middle"
-          fontSize={11}
+          fontSize={15}
           fontWeight="bold"
-          fill="#333"
+          fill="currentColor"
         >
           {formatTotalHours(totals[key] || 0)}
         </text>
@@ -224,16 +221,16 @@ function TotalHoursColumn({
         y1={gridBottom + 2}
         x2={TOTALS_X + 60}
         y2={gridBottom + 2}
-        stroke="#333"
+        stroke="currentColor"
         strokeWidth={1}
       />
       <text
         x={TOTALS_X + 30}
-        y={gridBottom + 16}
+        y={gridBottom + 20}
         textAnchor="middle"
-        fontSize={11}
+        fontSize={15}
         fontWeight="bold"
-        fill="#333"
+        fill="currentColor"
       >
         {formatTotalHours(grandTotal)}
       </text>

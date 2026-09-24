@@ -37,7 +37,7 @@ describe('LocationInput', () => {
 
   it('shows error message when provided', () => {
     render(<LocationInput {...defaultProps} error="Required field" />);
-    expect(screen.getByText('Required field')).toBeInTheDocument();
+    expect(screen.getByText(/Required field/)).toBeInTheDocument();
   });
 
   it('shows suggestions when API returns results', async () => {
@@ -51,6 +51,7 @@ describe('LocationInput', () => {
     const { rerender } = render(
       <LocationInput {...defaultProps} value="San" onChange={onChange} />,
     );
+    fireEvent.focus(screen.getByPlaceholderText('Enter location'));
     rerender(
       <LocationInput {...defaultProps} value="San Fra" onChange={onChange} />,
     );
@@ -71,6 +72,7 @@ describe('LocationInput', () => {
     const { rerender } = render(
       <LocationInput {...defaultProps} value="San" onChange={onChange} />,
     );
+    fireEvent.focus(screen.getByPlaceholderText('Enter location'));
     rerender(
       <LocationInput {...defaultProps} value="San Fra" onChange={onChange} />,
     );
@@ -94,6 +96,7 @@ describe('LocationInput', () => {
     const { rerender } = render(
       <LocationInput {...defaultProps} value="San" onChange={onChange} />,
     );
+    fireEvent.focus(screen.getByPlaceholderText('Enter location'));
     rerender(
       <LocationInput {...defaultProps} value="San Fra" onChange={onChange} />,
     );
@@ -118,6 +121,7 @@ describe('LocationInput', () => {
     const { rerender } = render(
       <LocationInput {...defaultProps} value="San" />,
     );
+    fireEvent.focus(screen.getByPlaceholderText('Enter location'));
     rerender(<LocationInput {...defaultProps} value="San Fra" />);
 
     await waitFor(() => {
@@ -139,5 +143,18 @@ describe('LocationInput', () => {
 
     fireEvent.blur(screen.getByPlaceholderText('Enter location'));
     expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps suggestions closed when the value changes without focus', async () => {
+    const { searchLocations } = await import('../api/locations');
+    vi.mocked(searchLocations).mockResolvedValue([
+      { name: 'San Francisco, CA', lat: 37.77, lng: -122.42 },
+    ]);
+
+    const { rerender } = render(<LocationInput {...defaultProps} value="San" />);
+    rerender(<LocationInput {...defaultProps} value="San Fra" />);
+
+    await waitFor(() => expect(searchLocations).toHaveBeenCalledWith('San Fra'));
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 });
